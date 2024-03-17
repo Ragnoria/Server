@@ -7,12 +7,14 @@
     <pre id="log"></pre>
     <script>
         // Create WebSocket connection.
-        const socket = new WebSocket("{{ config('websockets.protocol') }}://{{ config('websockets.host') }}:{{ config('websockets.port') }}");
+        const socket = new WebSocket("{{ config('websockets.protocol') }}://{{ config('websockets.host') }}:{{ config('websockets.port') }}/?token_furied");
 
         // Connection opened
         socket.addEventListener("open", (event) => {
             document.querySelector('#log').innerText += 'Connection established \r\n'
-            socket.send("Hello Server!");
+            socket.send(JSON.stringify({
+                action: 'ping'
+            }));
         });
 
         // Listen for messages

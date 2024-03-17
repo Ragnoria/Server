@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Http\WebsocketHandler;
 use App\Services\Log;
+use App\WebSocket\WebsocketHandler;
 use Illuminate\Console\Command;
 use Ratchet\Http\HttpServer;
 use Ratchet\Server\IoServer;

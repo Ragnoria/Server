@@ -35,8 +35,15 @@ abstract class Log
 
     public static function log($msg, string $fg = self::TEXT_LIGHT_GREY, string $bg = self::BACKGROUND_BLACK): void
     {
+        if ($msg instanceof \Throwable) {
+            $msg = [
+                'message' => $msg->getMessage(),
+                'file' => $msg->getFile(),
+                'line' => $msg->getLine(),
+            ];
+        }
         if (!is_string($msg)) {
-            $msg = json_encode($msg);
+            $msg = json_encode($msg, JSON_PRETTY_PRINT);
         }
 
         $date = date('Y-m-d H:i:s');

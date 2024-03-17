@@ -2,13 +2,13 @@
 
 namespace App\WebSocket\Entities;
 
-use App\WebSocket\Actions\Ping;
+use App\WebSocket\Actions\RequestTiles;
 use Ratchet\ConnectionInterface;
 
 class ActionRouter
 {
     private const ROUTES = [
-        'ping' => Ping::class
+        'request-tiles' => RequestTiles::class
     ];
 
     /**

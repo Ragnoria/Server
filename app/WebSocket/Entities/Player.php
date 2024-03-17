@@ -22,13 +22,23 @@ class Player
         if ($player = World::getPlayerByCharacter($character)) {
             $player->swapConnection($connection);
         } else {
-            World::attachPlayer(new Player($character, $connection));
+            $player = new Player($character, $connection);
+            World::attachPlayer($player);
         }
+
+        $player->connection->send(json_encode([
+            'event' => 'init',
+            'params' => [
+                'name' => $character->name,
+                'x' => 100,
+                'y' => 100
+            ]
+        ]));
     }
 
     public static function disconnect(ConnectionInterface $connection): void
     {
-        if (!$connection->player ?? false) {
+        if (!isset($connection->player) || !$connection->player) {
             return;
         }
 

@@ -4,6 +4,7 @@ namespace App\WebSocket\Entities;
 
 use App\Models\Character;
 use App\WebSocket\Exceptions\AuthException;
+use App\WebSocket\Services\Transmit;
 use Ratchet\ConnectionInterface;
 
 class Player
@@ -26,14 +27,7 @@ class Player
             World::attachPlayer($player);
         }
 
-        $player->connection->send(json_encode([
-            'event' => 'init',
-            'params' => [
-                'name' => $character->name,
-                'x' => 100,
-                'y' => 100
-            ]
-        ]));
+        Transmit::player($player)->init($character);
     }
 
     public static function disconnect(ConnectionInterface $connection): void

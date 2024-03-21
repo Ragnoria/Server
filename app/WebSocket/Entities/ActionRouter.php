@@ -2,21 +2,21 @@
 
 namespace App\WebSocket\Entities;
 
-use App\WebSocket\Actions\RequestTiles;
 use Ratchet\ConnectionInterface;
 
 class ActionRouter
 {
-    private const ROUTES = [
-        'request-tiles' => RequestTiles::class
-    ];
-
     /**
      * @param ConnectionInterface $connection
+     * @param string $message
      * @return void
      */
     public static function resolve(ConnectionInterface $connection, string $message): void
     {
+        if (!isset($connection->player) || !$connection->player) {
+            return;
+        }
+
         $action = static::getAction($message);
         $params = static::getParams($message);
 
@@ -38,7 +38,7 @@ class ActionRouter
         }
 
         $action = strtolower(trim($action));
-        if (!$actionClass = static::ROUTES[$action] ?? null) {
+        if (!$actionClass = config('websockets.actions')[$action] ?? null) {
             throw new \InvalidArgumentException("'{$action}' is not recognized as an internal action.");
         }
 

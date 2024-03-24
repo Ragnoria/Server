@@ -54,7 +54,7 @@ class Player
             World::attachPlayer($player);
         }
 
-        Transmit::player($player)
+        Transmit::to($player)
             ->init($character)
             ->runEffect('energy', [['x' => 100, 'y' => 100]], true)
             ->playSound('login');
@@ -83,5 +83,26 @@ class Player
 
         $this->connection = $connection;
         $this->connection->player = $this;
+    }
+
+    public function addItemToInventory(int $item, int $quantity = 1): void
+    {
+        $slot = $this->getFirstSlotWithItem($item) ?? $this->getFirstSlotWithItem(null);
+        $slotQuantity = ($slot['quantity'] ?? 0) + $quantity;
+        $this->inventory[$slot['slotId']] = ['itemId' => $item, 'quantity' => $slotQuantity];
+    }
+
+    private function getFirstSlotWithItem(?int $itemId): ?array
+    {
+        foreach ($this->inventory as $slotId => $item) {
+            if ($itemId == $item['itemId']) {
+                return [
+                    'slotId' => $slotId,
+                    'quantity' => $item['quantity']
+                ];
+            }
+        }
+
+        return null;
     }
 }

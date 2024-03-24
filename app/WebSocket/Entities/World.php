@@ -35,4 +35,9 @@ class World
             '{online}' => count(static::$players)
         ]));
     }
+
+    public static function getTile(array $position): Tile
+    {
+        return new Tile;
+    }
 }

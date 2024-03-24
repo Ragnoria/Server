@@ -2,57 +2,77 @@
 
 namespace App\WebSocket\Actions;
 
+use App\WebSocket\Entities\Item;
+use App\WebSocket\Entities\World;
 use App\WebSocket\Services\Transmit;
+use Illuminate\Support\Arr;
 
 class UseObject extends Action
 {
     public function run(): void
     {
-        if (!$itemId = $this->params['itemId'] ?? null) {
-            return;
-        }
-
-        match ($itemId) {
-            8 => $this->oreHit(),
+        match ($this->getItem()) {
+            Item::CHEST => $this->openChest(),
+            Item::ORE_VEIN => $this->mine(),
             default => null,
         };
     }
 
-    private function oreHit(): void
+    protected function openChest(): void
     {
-        if (!$position = $this->params['position'] ?? null) {
-            return;
-        }
+        $receivedItem = Arr::random([Item::HEALTH_POTION, Item::MANA_POTION, Item::PLATE_ARMOR]);
 
-        Transmit::player($this->player)
+        $this->player->addItemToInventory($receivedItem);
+
+        World::getTile($this->getPosition())
+            ->removeItem(Item::CHEST);
+
+        Transmit::to($this->player)
+            ->updateInventory()
+            ->loot($receivedItem);
+
+        Transmit::nearby($this->player)
+            ->playSound('chest')
+            ->updateTile($this->getPosition())
+            ->runEffect('yellow-sparkles', [$this->getPosition()])
+            ->floatText('Ohh, nice!', $this->getPosition(), '#fff0a5');
+    }
+
+    protected function mine(): void
+    {
+        Transmit::to($this->player)
             ->playSound('mining')
-            ->runEffect('ore-hit', [$position]);
+            ->runEffect('ore-hit', [$this->getPosition()]);
 
         $dropChance = !rand(0,3);
         $dropQuantity = rand(1,3);
 
         if ($dropQuantity && $dropChance) {
-            $slot = $this->getFirstSlotWithItem(10) ?? $this->getFirstSlotWithItem(null);
-            $slotQuantity = ($slot['quantity'] ?? 0) + $dropQuantity;
-            $this->player->inventory[$slot['slotId']] = ['itemId' => 10, 'quantity' => $slotQuantity];
+            $this->player->addItemToInventory(Item::ORE, $dropQuantity);
 
-            Transmit::player($this->player)
-                ->updateInventorySlot($slot['slotId'], 10, $slotQuantity)
-                ->loot(10, $dropQuantity);
+            Transmit::to($this->player)
+                ->updateInventory()
+                ->floatText('+3 exp', $this->getPosition())
+                ->loot(Item::ORE, $dropQuantity);
         }
     }
 
-    private function getFirstSlotWithItem(?int $itemId): ?array
+    private function getItem(): ?int
     {
-        foreach ($this->player->inventory as $slotId => $item) {
-            if ($itemId == $item['itemId']) {
-                return [
-                    'slotId' => $slotId,
-                    'quantity' => $item['quantity']
-                ];
-            }
+        return $this->params['itemId'] ?? null;
+    }
+
+    private function getPosition(): ?array
+    {
+        return $this->params['position'] ?? null;
+    }
+
+    public function validate(): bool
+    {
+        if (!$this->getItem() || !$this->getPosition()) {
+            return false;
         }
 
-        return null;
+        return true;
     }
 }

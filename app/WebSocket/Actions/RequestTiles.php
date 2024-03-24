@@ -10,7 +10,7 @@ class RequestTiles extends Action
     {
         $tiles = $this->generateTiles($this->params['positions']);
 
-        Transmit::player($this->player)
+        Transmit::to($this->player)
             ->updateTiles($tiles);
     }
 
